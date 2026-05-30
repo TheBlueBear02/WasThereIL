@@ -31,3 +31,7 @@ body {
   direction: rtl;
   min-height: 100svh;
 }
+
+button:not(:disabled) {
+  cursor: pointer;
+}

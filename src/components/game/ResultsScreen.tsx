@@ -68,7 +68,7 @@ export function ResultsScreen({
         <button
           type="button"
           onClick={onHome}
-          className="flex h-11 w-full items-center justify-center rounded-lg border border-stone-300 bg-white px-6 text-sm font-semibold text-stone-900 transition-colors hover:bg-stone-50"
+          className="flex h-11 w-full cursor-pointer items-center justify-center rounded-lg border border-stone-300 bg-white px-6 text-sm font-semibold text-stone-900 transition-colors hover:bg-stone-50"
         >
           חזרה לדף הבית
         </button>

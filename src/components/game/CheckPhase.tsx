@@ -50,6 +50,7 @@ export function CheckPhase({
             comparePercent={result.actualPercent}
             compareStrokeClassName={answerStrokeClass}
             readOnly
+            animateCompare
           />
 
           <p className="text-xs text-stone-500 text-center">
@@ -61,11 +62,11 @@ export function CheckPhase({
           </p>
         </div>
 
-        <div className="p-4">
+        <div className="mx-4 rounded-xl border border-stone-200 bg-stone-50 p-4">
           <p className="mb-3 text-xs font-medium text-stone-600">
             פילוח לפי גילאים
           </p>
-          <AgeTierChart tiers={tiers} />
+          <AgeTierChart tiers={tiers} animate />
         </div>
       </div>
 

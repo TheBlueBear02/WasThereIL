@@ -23,6 +23,7 @@ function App() {
           session={session}
           onSubmitGuess={submitGuess}
           onNext={nextRound}
+          onExit={goHome}
         />
       )}
       {screen === 'results' && session && (

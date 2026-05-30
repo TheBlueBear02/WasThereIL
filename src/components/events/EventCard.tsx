@@ -39,7 +39,7 @@ export function EventCard({ event, isExpanded, onToggle }: EventCardProps) {
       <button
         type="button"
         onClick={onToggle}
-        className="flex min-h-11 w-full flex-col gap-2 p-4 text-start"
+        className="flex min-h-11 w-full cursor-pointer flex-col gap-2 p-4 text-start"
         aria-expanded={isExpanded}
       >
         <div className="flex items-start justify-between gap-3">

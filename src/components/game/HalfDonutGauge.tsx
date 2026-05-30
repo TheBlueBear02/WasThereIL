@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef } from 'react'
 import { formatPercent } from '../../lib/calculations'
+import { useAnimatedValue } from '../../hooks/useAnimatedValue'
 
 type HalfDonutGaugeProps = {
   percent: number
@@ -8,6 +9,8 @@ type HalfDonutGaugeProps = {
   comparePercent?: number
   compareStrokeClassName?: string
   readOnly?: boolean
+  /** Animate compare arc and answer label from 0% on mount (check phase) */
+  animateCompare?: boolean
   /** Tailwind stroke class for the filled arc (e.g. stroke-primary) */
   strokeClassName?: string
   ariaLabel?: string
@@ -60,15 +63,23 @@ export function HalfDonutGauge({
   comparePercent,
   compareStrokeClassName = 'stroke-stone-900',
   readOnly = false,
+  animateCompare = false,
   strokeClassName = 'stroke-primary',
   ariaLabel = 'אחוז הניחוש',
 }: HalfDonutGaugeProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const labelId = useId()
   const isInteractive = !readOnly && onChange != null
+  const displayedCompare = useAnimatedValue(comparePercent ?? 0, {
+    enabled: animateCompare && comparePercent != null,
+    durationMs: 2000,
+    delayMs: 500,
+  })
+  const compareValue =
+    comparePercent != null && animateCompare ? displayedCompare : comparePercent
   const progressPath = progressArcPath(percent)
   const comparePath =
-    comparePercent != null ? progressArcPath(comparePercent) : null
+    compareValue != null ? progressArcPath(compareValue) : null
 
   const updateFromPointer = useCallback(
     (clientX: number, clientY: number) => {
@@ -111,12 +122,12 @@ export function HalfDonutGauge({
 
   const compareAriaLabel =
     comparePercent != null
-      ? `ניחוש ${formatPercent(percent / 100)}, תשובה ${formatPercent(comparePercent / 100)}`
+      ? `ניחוש ${formatPercent(percent / 100)}, תשובה ${formatPercent((compareValue ?? comparePercent) / 100)}`
       : ariaLabel
 
   /** Shorter arc on top so both colors stay visible when one value is lower */
   const guessOnTop =
-    comparePercent != null && percent < comparePercent
+    compareValue != null && percent < compareValue
 
   return (
     <div className="relative mx-auto w-full max-w-[300px]" dir="ltr">
@@ -145,7 +156,7 @@ export function HalfDonutGauge({
           strokeWidth={STROKE}
           strokeLinecap="round"
         />
-        {comparePercent != null ? (
+        {compareValue != null ? (
           <>
             {!guessOnTop && progressPath && (
               <path
@@ -186,7 +197,7 @@ export function HalfDonutGauge({
             />
           )
         )}
-        {comparePercent != null ? (
+        {compareValue != null ? (
           <>
             <text
               x={CX}
@@ -205,7 +216,7 @@ export function HalfDonutGauge({
               className="fill-stone-900 text-[1.85rem] font-semibold"
               style={{ fontFamily: 'inherit' }}
             >
-              {formatPercent(comparePercent / 100)}
+              {formatPercent(compareValue / 100)}
             </text>
           </>
         ) : (
@@ -225,7 +236,7 @@ export function HalfDonutGauge({
         <span>0%</span>
         <span>100%</span>
       </div>
-      {comparePercent != null && (
+      {compareValue != null && (
         <div className="mt-3 flex justify-center gap-4 text-xs text-stone-600">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-4 rounded-full bg-primary-muted" />
