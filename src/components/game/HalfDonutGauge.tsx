@@ -1,4 +1,8 @@
 import { useCallback, useId, useRef } from 'react'
+import {
+  CHECK_GAUGE_DELAY_MS,
+  CHECK_GAUGE_DURATION_MS,
+} from '../../lib/checkPhaseAnimation'
 import { formatPercent } from '../../lib/calculations'
 import { useAnimatedValue } from '../../hooks/useAnimatedValue'
 
@@ -21,6 +25,8 @@ const CX = SIZE / 2
 const CY = SIZE * 0.58
 const RADIUS = 99
 const STROKE = 18
+/** Top arc in compare mode — slightly wider to mask the arc beneath */
+const TOP_STROKE = STROKE + 2
 
 /** Upper semicircle arc, left → over the top → right */
 const ARC_PATH = `M ${CX - RADIUS} ${CY} A ${RADIUS} ${RADIUS} 0 0 1 ${CX + RADIUS} ${CY}`
@@ -72,8 +78,8 @@ export function HalfDonutGauge({
   const isInteractive = !readOnly && onChange != null
   const displayedCompare = useAnimatedValue(comparePercent ?? 0, {
     enabled: animateCompare && comparePercent != null,
-    durationMs: 2000,
-    delayMs: 500,
+    durationMs: CHECK_GAUGE_DURATION_MS,
+    delayMs: CHECK_GAUGE_DELAY_MS,
   })
   const compareValue =
     comparePercent != null && animateCompare ? displayedCompare : comparePercent
@@ -172,7 +178,7 @@ export function HalfDonutGauge({
                 d={comparePath}
                 fill="none"
                 className={compareStrokeClassName}
-                strokeWidth={STROKE}
+                strokeWidth={guessOnTop ? STROKE : TOP_STROKE}
                 strokeLinecap="round"
               />
             )}
@@ -181,7 +187,7 @@ export function HalfDonutGauge({
                 d={progressPath}
                 fill="none"
                 className="stroke-primary-muted"
-                strokeWidth={STROKE}
+                strokeWidth={TOP_STROKE}
                 strokeLinecap="round"
               />
             )}
@@ -201,7 +207,7 @@ export function HalfDonutGauge({
           <>
             <text
               x={CX}
-              y={CY - 22}
+              y={CY - 42}
               textAnchor="middle"
               className="fill-stone-500 text-[0.8rem] font-medium"
               style={{ fontFamily: 'inherit' }}
@@ -211,7 +217,7 @@ export function HalfDonutGauge({
             <text
               id={labelId}
               x={CX}
-              y={CY + 6}
+              y={CY - 12}
               textAnchor="middle"
               className="fill-stone-900 text-[1.85rem] font-semibold"
               style={{ fontFamily: 'inherit' }}
@@ -223,7 +229,7 @@ export function HalfDonutGauge({
           <text
             id={labelId}
             x={CX}
-            y={CY - 12}
+            y={CY - 22}
             textAnchor="middle"
             className="fill-stone-900 text-[2rem] font-semibold"
             style={{ fontFamily: 'inherit' }}

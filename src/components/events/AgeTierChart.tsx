@@ -11,22 +11,34 @@ const TIER_COLORS = [
 
 const BAR_STAGGER_MS = 700
 const BAR_DURATION_MS = 1000
-const REVEAL_DELAY_MS = 2500
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 type AgeTierChartProps = {
   tiers: AgeTier[]
   /** Stagger bar fill + fade-in on mount (check phase) */
   animate?: boolean
+  /** When to start the reveal (check phase: after points animation) */
+  revealDelayMs?: number
 }
 
-export function AgeTierChart({ tiers, animate = false }: AgeTierChartProps) {
-  const [revealed, setRevealed] = useState(!animate)
+export function AgeTierChart({
+  tiers,
+  animate = false,
+  revealDelayMs = 2500,
+}: AgeTierChartProps) {
+  const [revealed, setRevealed] = useState(
+    !animate || prefersReducedMotion(),
+  )
 
   useEffect(() => {
-    if (!animate) return
-    const timeoutId = window.setTimeout(() => setRevealed(true), REVEAL_DELAY_MS)
+    if (!animate || prefersReducedMotion()) return
+    const timeoutId = window.setTimeout(() => setRevealed(true), revealDelayMs)
     return () => window.clearTimeout(timeoutId)
-  }, [animate])
+  }, [animate, revealDelayMs])
 
   return (
     <div

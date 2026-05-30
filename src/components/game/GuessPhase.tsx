@@ -29,7 +29,7 @@ export function GuessPhase({ event, onSubmit }: GuessPhaseProps) {
 
         <div className="px-4 pb-5">
           <p className="mb-0 text-center text-sm text-stone-600">
-            מה אחוז האוכלוסייה שהייתה בישראל באותה תקופה?
+            איזה חלק מהאוכלוסייה בישראל היום היה כאן בזמן {event.name}?
           </p>
           <HalfDonutGauge
             percent={guessPercent}

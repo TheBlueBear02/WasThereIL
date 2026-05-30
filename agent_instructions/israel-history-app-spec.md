@@ -41,8 +41,8 @@ Three screens, no router — screen state in [`useGameSession`](../src/hooks/use
 
 ### Round flow
 
-1. **Guessing:** Event name + year + short description (centered), then `gap-8` before the question prompt. Upper semicircle donut gauge 0–100% with percentage in the center; drag arc, arrow keys (step 1, Shift+10), or range slider under the gauge. **אישור** in the shared bottom action slot (see Mobile-First UI Notes). **אישור** submits.
-2. **Check:** Same header (name, year, description) as guessing. Same half-donut gauge as guessing, read-only with two arcs (guess = muted primary, actual = category stroke color). On enter, the **answer arc and center percentage** animate from 0% to the real value over ~1.6s after a ~400ms pause (`animateCompare` on `HalfDonutGauge`, via [`useAnimatedValue`](../src/hooks/useAnimatedValue.ts); respects `prefers-reduced-motion`). Guess arc is static. Legend under gauge. Approx population count, age-tier card (`rounded-xl` border + `bg-stone-50`) with `AgeTierChart` (`animate`: ~400ms pause, then card fades/slides in and bars fill with staggered delays), round points. **הבא** (rounds 1–3) or **לתוצאות** (round 4).
+1. **Guessing:** Event name + year + short description (centered), then `gap-12` before the gauge. Prompt above gauge: «איזה חלק מהאוכלוסייה בישראל היום היה כאן בזמן {event name}?». Upper semicircle donut gauge 0–100% with percentage in the center; drag arc, arrow keys (step 1, Shift+10), or range slider under the gauge. **אישור** in the shared bottom action slot (see Mobile-First UI Notes). **אישור** submits.
+2. **Check:** Same header (name, year, description) as guessing. Same half-donut gauge as guessing, read-only with two arcs (guess = muted primary, actual = category stroke color). On enter, animations run **in sequence** (timings in [`checkPhaseAnimation.ts`](../src/lib/checkPhaseAnimation.ts); all respect `prefers-reduced-motion` where applicable): (1) **answer arc and center percentage** animate from 0% over ~2s after a ~500ms pause (`HalfDonutGauge` / `useAnimatedValue`); (2) **round points** fade/slide in and count up from 0 over ~900ms after the gauge finishes; (3) **age-tier chart** (`AgeTierChart` with `revealDelayMs`) fades/slides in and bars fill with staggered delays after points finish (~200ms gap). Guess arc is static. Legend under gauge. Approx population count. Age-tier card (`rounded-xl` border + `bg-stone-50`). **הבא** (rounds 1–3) or **לתוצאות** (round 4).
 3. After round 4 check → Results screen.
 
 ### Scoring
@@ -243,7 +243,7 @@ For each tier: a person qualifies if their **current age** is ≥ (2025 − even
 - Each bar has: Hebrew label (start), colored progress bar (`dir="rtl"` — fill grows right→left), percentage (end)
 - Each tier uses a distinct color
 - All percentages are pre-calculated and passed as props
-- **`animate` prop (check phase):** ~400ms delay, then container and rows fade/slide in; bar widths grow from 0 with ~80ms stagger between tiers (~500ms width transition). Without `animate` (e.g. `EventCard` expanded), bars render at full width immediately; root keeps `border-t` spacing for browse UI
+- **`animate` prop (check phase):** `revealDelayMs` from [`checkPhaseAnimation.ts`](../src/lib/checkPhaseAnimation.ts) (after donut + points sequence); then container and rows fade/slide in; bar widths grow from 0 with staggered delays (~700ms between tiers, ~1000ms width transition). Without `animate` (e.g. `EventCard` expanded), bars render at full width immediately; root keeps `border-t` spacing for browse UI
 
 ### `useEventFilter` hook
 - Holds `activeCategory` state
@@ -294,12 +294,12 @@ If added, create a single `events` table and a `cbs_population` table mirroring 
 - **Primary CTAs:** [`PrimaryButton`](../src/components/ui/PrimaryButton.tsx) — fixed `h-11` (44px), flex-centered label; used for **שחק**, **אישור**, **הבא**, **לתוצאות**, **שחק שוב**.
 - **Bottom action slot:** [`BOTTOM_ACTION_CLASS`](../src/components/layout/bottomAction.ts) — every screen uses `flex flex-1 flex-col` under [`App`](../src/App.tsx)’s `h-svh overflow-hidden` main; primary CTAs sit in this pinned footer (`shrink-0`, top border, `1.5rem` bottom padding plus safe-area inset) so they stay visible without scrolling. Scrollable panels use `flex-1 min-h-0 overflow-y-auto` above the footer (guess, check, results).
 - **Game headers:** Event name, year, and short description are **centered** on guess and check phases. Event title uses **bold 2xl/3xl** (`text-2xl sm:text-3xl font-bold`); year label is `text-base text-stone-500`; description is `text-sm text-stone-600`, max width ~384px (`max-w-sm`).
-- **Guess gauge:** [`HalfDonutGauge`](../src/components/game/HalfDonutGauge.tsx) — upper-half donut (`dir="ltr"`), **280×158 viewBox**, max width **300px**; filled arc uses `stroke-primary`; 0%/100% labels under the arc. Horizontal `input[type=range]` below the gauge (same state, `accent-primary`), centered at **85%** width (`w-[85%] max-w-xs`).
+- **Guess gauge:** [`HalfDonutGauge`](../src/components/game/HalfDonutGauge.tsx) — upper-half donut (`dir="ltr"`), **280×158 viewBox**, max width **300px**; filled arc uses `stroke-primary`; 0%/100% labels under the arc. Center percentage label(s) sit in the donut hole, offset upward from the arc baseline (`CY − 36` single mode; compare mode: guess label `CY − 46`, answer `CY − 18`) so the text block is vertically centered in the semicircle. Horizontal `input[type=range]` below the gauge (same state, `accent-primary`), centered at **85%** width (`w-[85%] max-w-xs`). In compare mode (check phase), the shorter arc is drawn on top; its stroke is **+2px** wider than the base arc (`STROKE=18`, `TOP_STROKE=20`) so the lower arc does not bleed through at the edges.
 - **Game content panels:** Gauge section has no border or background fill. Check-phase age breakdown uses a light card (`rounded-xl border-stone-200 bg-stone-50`).
 - Max content width: ~430px, centered on desktop
 - All tap targets minimum 44px height
 - Legacy browse cards (`EventCard`) keep subtle border + `bg-stone-50`; game screen panels do not
-- Bar animations on mount: browse `EventCard` / `ProgressBar` use width transition 0.4s ease; check phase uses `useAnimatedValue` (donut answer arc) and `AgeTierChart` staggered bar fill
+- Bar animations on mount: browse `EventCard` / `ProgressBar` use width transition 0.4s ease; check phase runs a **sequenced** reveal (gauge → points → age tiers) via [`checkPhaseAnimation.ts`](../src/lib/checkPhaseAnimation.ts), `useAnimatedValue`, and `AgeTierChart` staggered bar fill
 - Font sizes: game event title 24–30px, year label 16px, card name 14px (browse), percentages 15px, labels 11–12px
 
 ---

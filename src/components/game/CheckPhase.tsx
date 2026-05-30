@@ -1,8 +1,14 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { HistoryEvent, RoundResult } from '../../types'
 import { formatCount, getAgeTiers, getApproxCount } from '../../lib/calculations'
 import { getCategoryStrokeStyle } from '../../lib/categoryStyles'
 import { formatYearRange, ROUNDS_PER_GAME } from '../../lib/game'
+import { useAnimatedValue } from '../../hooks/useAnimatedValue'
+import {
+  CHECK_AGE_TIER_DELAY_MS,
+  CHECK_POINTS_DELAY_MS,
+  CHECK_POINTS_DURATION_MS,
+} from '../../lib/checkPhaseAnimation'
 import { BOTTOM_ACTION_CLASS } from '../layout/bottomAction'
 import { PrimaryButton } from '../ui/PrimaryButton'
 import { AgeTierChart } from '../events/AgeTierChart'
@@ -31,6 +37,27 @@ export function CheckPhase({
     [result.actualPercent],
   )
 
+  const [pointsRevealed, setPointsRevealed] = useState(false)
+  const animatedPoints = useAnimatedValue(result.points, {
+    durationMs: CHECK_POINTS_DURATION_MS,
+    delayMs: CHECK_POINTS_DELAY_MS,
+  })
+
+  useEffect(() => {
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) {
+      setPointsRevealed(true)
+      return
+    }
+    const timeoutId = window.setTimeout(
+      () => setPointsRevealed(true),
+      CHECK_POINTS_DELAY_MS,
+    )
+    return () => window.clearTimeout(timeoutId)
+  }, [])
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
@@ -57,8 +84,14 @@ export function CheckPhase({
             כ־{formatCount(approxCount)} אנשים
           </p>
 
-          <p className="border-t border-stone-200 pt-3 text-center text-sm font-semibold text-stone-900">
-            {result.points} נקודות בסיבוב זה
+          <p
+            className={`border-t border-stone-200 pt-3 text-center text-sm font-semibold text-stone-900 transition-all duration-500 ease-out ${
+              pointsRevealed
+                ? 'translate-y-0 opacity-100'
+                : 'translate-y-2 opacity-0'
+            }`}
+          >
+            קיבלת {Math.round(animatedPoints)} נקודות בסיבוב זה
           </p>
         </div>
 
@@ -66,7 +99,11 @@ export function CheckPhase({
           <p className="mb-3 text-xs font-medium text-stone-600">
             פילוח לפי גילאים
           </p>
-          <AgeTierChart tiers={tiers} animate />
+          <AgeTierChart
+            tiers={tiers}
+            animate
+            revealDelayMs={CHECK_AGE_TIER_DELAY_MS}
+          />
         </div>
       </div>
 
