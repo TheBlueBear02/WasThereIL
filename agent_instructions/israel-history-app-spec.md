@@ -23,7 +23,7 @@ A mobile-first React web app that shows what percentage of people living in Isra
 
 **Events pool:** All **14** events in [`src/data/events.ts`](../src/data/events.ts) (Hebrew names). Each game picks **4** at random. `category` drives progress bar color via [`src/lib/categoryStyles.ts`](../src/lib/categoryStyles.ts).
 
-**Built UI (game):** `HomeScreen`, `GameScreen` (`GuessPhase` + `CheckPhase`), `ResultsScreen`, `useGameSession`, [`src/lib/game.ts`](../src/lib/game.ts). Reuses `AgeTierChart` on the check phase.
+**Built UI (game):** `HomeScreen`, `GameScreen` (`GuessPhase` + `CheckPhase`), `ResultsScreen`, `useGameSession`, [`src/lib/game.ts`](../src/lib/game.ts). Reuses `AgeTierChart` on the check phase and `HalfDonutGauge` on check + results.
 
 **Legacy browse UI (not mounted):** `PageHeader`, `EventList`, `EventCard` remain in repo but are not used in [`App.tsx`](../src/App.tsx). Deferred: `SummaryBar`, `CategoryFilter`, `useEventFilter`.
 
@@ -37,7 +37,7 @@ Three screens, no router — screen state in [`useGameSession`](../src/hooks/use
 |--------|----------------|----------|
 | Home | **שחק** | Matzav HaUma header logo (`/images/header-logo.png`), title, description, play starts a session |
 | Game | **אישור**, **הבא**, **לתוצאות**, exit (top-left) | 4 rounds; each round has **guessing** then **check**; circular back button (top-left) calls `goHome` and clears the session |
-| Results | **שחק שוב**, **חזרה לדף הבית** | Total score + per-round breakdown; play again or home |
+| Results | **שחק שוב**, **חזרה לדף הבית** | Total score + per-round cards (event name + points + read-only dual-arc `HalfDonutGauge`); scroll area uses `dir="ltr"` so the scrollbar sits on the right while inner content stays RTL; play again or home |
 
 ### Round flow
 
@@ -186,7 +186,7 @@ For each tier: a person qualifies if their **current age** is ≥ (2025 − even
 │   │   │   ├── HalfDonutGauge.tsx
 │   │   │   └── ProgressBar.tsx
 │   │   │
-│   │   ├── layout/                # Legacy (not mounted)
+│   │   ├── layout/                # bottomAction, DesktopSideBackground (md+)
 │   │   │   └── PageHeader.tsx
 │   │   │
 │   │   └── events/
@@ -205,7 +205,7 @@ For each tier: a person qualifies if their **current age** is ≥ (2025 − even
 ## Component Breakdown
 
 ### `HomeScreen` (replaces mounted `PageHeader`)
-- Matzav HaUma logo (`/images/header-logo.png`, `alt="מצב האומה"`, `h-16` / 64px tall, full content width) pinned near top (`pt-2`).
+- Matzav HaUma logo (`/images/header-logo.png`, `alt="מצב האומה"`, `h-12` / 48px tall, full content width) pinned near top (`pt-2`).
 - Hebrew title **אתה זוכר?** (`text-4xl font-bold`) and description sit lower in the scroll area (`pt-14` below logo), **שחק** button.
 - Footer line cites CBS 2024 population with `formatCount` (Hebrew units).
 
@@ -292,11 +292,11 @@ If added, create a single `events` table and a `cbs_population` table mirroring 
 ## Mobile-First UI Notes
 - **Primary brand color:** `#4890FD` — defined in [`src/index.css`](../src/index.css) as Tailwind tokens `primary`, `primary-hover`, `primary-muted` (CTA buttons, guess donut arc on guessing phase, guess bar on check phase).
 - **Primary CTAs:** [`PrimaryButton`](../src/components/ui/PrimaryButton.tsx) — fixed `h-11` (44px), flex-centered label; used for **שחק**, **אישור**, **הבא**, **לתוצאות**, **שחק שוב**.
-- **Bottom action slot:** [`BOTTOM_ACTION_CLASS`](../src/components/layout/bottomAction.ts) — every screen uses `flex flex-1 flex-col` under [`App`](../src/App.tsx)’s `h-svh overflow-hidden` main; primary CTAs sit in this pinned footer (`shrink-0`, top border, `1.5rem` bottom padding plus safe-area inset) so they stay visible without scrolling. Scrollable panels use `flex-1 min-h-0 overflow-y-auto` above the footer (guess, check, results).
+- **Bottom action slot:** [`BOTTOM_ACTION_CLASS`](../src/components/layout/bottomAction.ts) — every screen uses `flex flex-1 flex-col` under [`App`](../src/App.tsx)’s `h-svh overflow-hidden` main; primary CTAs sit in this pinned footer (`shrink-0`, top border, `pt-4`, `pb-[calc(1.5rem+env(safe-area-inset-bottom))]`) so they stay visible without scrolling. Scrollable panels use `flex-1 min-h-0 overflow-y-auto` above the footer (guess, check, results).
 - **Game headers:** Event name, year, and short description are **centered** on guess and check phases. Event title uses **bold 2xl/3xl** (`text-2xl sm:text-3xl font-bold`); year label is `text-base text-stone-500`; description is `text-sm text-stone-600`, max width ~384px (`max-w-sm`).
 - **Guess gauge:** [`HalfDonutGauge`](../src/components/game/HalfDonutGauge.tsx) — upper-half donut (`dir="ltr"`), **280×158 viewBox**, max width **300px**; filled arc uses `stroke-primary`; 0%/100% labels under the arc. Center percentage label(s) sit in the donut hole, offset upward from the arc baseline (`CY − 36` single mode; compare mode: guess label `CY − 46`, answer `CY − 18`) so the text block is vertically centered in the semicircle. Horizontal `input[type=range]` below the gauge (same state, `accent-primary`), centered at **85%** width (`w-[85%] max-w-xs`). In compare mode (check phase), the shorter arc is drawn on top; its stroke is **+2px** wider than the base arc (`STROKE=18`, `TOP_STROKE=20`) so the lower arc does not bleed through at the edges.
 - **Game content panels:** Gauge section has no border or background fill. Check-phase age breakdown uses a light card (`rounded-xl border-stone-200 bg-stone-50`).
-- Max content width: ~430px, centered on desktop
+- Max content width: ~430px, centered on desktop. On **`md+`** viewports, [`DesktopSideBackground`](../src/components/layout/DesktopSideBackground.tsx) fills the side margins with fixed primary / `primary-muted` rounded blobs (circles, squircles, bordered square, rings) on a soft blue–stone gradient; blobs use a slow `side-blob-float` animation (`prefers-reduced-motion` disables it). The game column stays flat white (no panel shadow) so side edges do not pick up a blue glow.
 - All tap targets minimum 44px height
 - Legacy browse cards (`EventCard`) keep subtle border + `bg-stone-50`; game screen panels do not
 - Bar animations on mount: browse `EventCard` / `ProgressBar` use width transition 0.4s ease; check phase runs a **sequenced** reveal (gauge → points → age tiers) via [`checkPhaseAnimation.ts`](../src/lib/checkPhaseAnimation.ts), `useAnimatedValue`, and `AgeTierChart` staggered bar fill

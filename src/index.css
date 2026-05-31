@@ -35,3 +35,13 @@ body {
 button:not(:disabled) {
   cursor: pointer;
 }
+
+@keyframes side-blob-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0) rotate(2deg);
+  }
+}

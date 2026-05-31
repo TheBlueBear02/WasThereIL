@@ -16,7 +16,7 @@ export function HomeScreen({ onPlay }: HomeScreenProps) {
         <img
           src="/images/header-logo.png"
           alt="מצב האומה"
-          className="mx-auto h-16 w-full object-contain"
+          className="mx-auto h-12 w-full object-contain"
         />
       </header>
 
@@ -25,6 +25,7 @@ export function HomeScreen({ onPlay }: HomeScreenProps) {
           אתה זוכר?
         </h1>
         <p className="mt-4 max-w-xs text-sm leading-relaxed text-stone-600">
+          
           נחשו איזה חלק מהאוכלוסייה בישראל היום היה כאן בזמן אירועים היסטוריים
         </p>
         <p className="mt-2 text-xs text-stone-500">

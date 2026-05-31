@@ -1,6 +1,7 @@
 import { HomeScreen } from './components/game/HomeScreen'
 import { GameScreen } from './components/game/GameScreen'
 import { ResultsScreen } from './components/game/ResultsScreen'
+import { DesktopSideBackground } from './components/layout/DesktopSideBackground'
 import { useGameSession } from './hooks/useGameSession'
 
 function App() {
@@ -16,7 +17,9 @@ function App() {
   } = useGameSession()
 
   return (
-    <main className="mx-auto flex h-svh max-w-[430px] flex-col overflow-hidden bg-white px-4 pt-6 text-start text-stone-900">
+    <div className="relative min-h-svh md:bg-stone-50/80">
+      <DesktopSideBackground />
+      <main className="relative z-10 mx-auto flex h-svh max-w-[430px] flex-col overflow-hidden bg-white px-4 pt-6 text-start text-stone-900">
       {screen === 'home' && <HomeScreen onPlay={startGame} />}
       {screen === 'game' && session && (
         <GameScreen
@@ -34,7 +37,8 @@ function App() {
           onHome={goHome}
         />
       )}
-    </main>
+      </main>
+    </div>
   )
 }
 
